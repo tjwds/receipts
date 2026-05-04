@@ -9,6 +9,6 @@ export const siteConfig = {
     { label: "Rules", href: "/rules" },
   ],
   links: {
-    github: "https://github.com/receipts-cli/receipts",
+    github: "https://github.com/tjwds/receipts",
   },
 };

@@ -110,13 +110,17 @@ Walk file by file. For each file, identify the coherent units of change. **A blo
 
 Examples of *bad* block boundaries:
 
-- "Everything in `foo.ts`" — too coarse. Split per logical change.
+- "Everything in `foo.ts`" — almost always wrong. A file with 100+ lines changed virtually never represents one logical change.
+- A block that spans both a header-comment rewrite and a function body change in the same file — two unrelated changes that happen to live near each other; split them.
 - "Lines 1–10" with no logical justification — the boundary should follow meaning, not line numbers.
 - "Just the import change" — too granular if the import is part of a larger feature in the same file.
 
 Rules of thumb:
 
+- **Prefer smaller blocks.** A typical block covers 5–50 changed lines. If you're at 100+ lines for one block, you're almost certainly merging multiple unrelated logical changes — split until each block is one thing the reviewer can hold in their head at once.
+- **Expect multiple blocks per file.** If a file has more than a handful of lines changed, it almost always contains more than one logical change. A 200-line dbt model change with 1 block is a code smell; 4 blocks of ~50 lines each is closer to the norm.
 - **One block, one verdict.** If you find yourself wanting half the block green and half red, split it.
+- **One block, one topic.** If the block's title needs an "and" (e.g., "header rewrite *and* CASE removal"), it's two blocks.
 - **Every changed line should be inside at least one block.** Files with no blocks are fine if the diff in that file is purely cosmetic; they appear in the sidebar as "not reviewed."
 - **Parent blocks** are a thing for file-level attestations ("no new dependencies in this file", "no secrets") that span the whole file. Use the `parent` field to nest sub-blocks.
 

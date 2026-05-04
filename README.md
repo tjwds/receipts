@@ -2,7 +2,7 @@
 
 > A code review tool for the agentic era. Every diff, with receipts.
 
-LLMs are increasingly involved in generating, refining, and reviewing code. As more changes arrive faster, reviewers naturally fall back to skimming. `receipts` codifies the discipline of careful review by turning it into a structured, scannable artifact: for every block of a diff, an agent records what it checked, how it checked, and the evidence — and the result is rendered side-by-side with the diff.
+LLMs are increasingly involved in generating, refining, and reviewing code. `receipts` codifies the discipline of careful review by turning it into a structured, scannable artifact: for every block of a diff, an agent records what it checked, how it checked, and the evidence — and the result is rendered side-by-side with the diff.
 
 Three pieces:
 
@@ -88,13 +88,6 @@ A **block** is a coherent line range in a file (or parallel ranges across files 
 A **check** has a status, a title, a body, and trailers (`Verified-by:`, `Method:`, optional `Source:`). Branch checks use the same shape, including one check per CI job sourced from `gh pr checks <pr>`.
 
 The skill documents adding `.receipts/` to the target repo's `.gitignore` so reviews stay local-only.
-
-## What's not in v0.1
-
-- **No CLI.** `receipts init` / `receipts view` / `receipts install-skill` aren't real commands. Setup is `git clone`, `npm install`, and the symlink above.
-- **No GitHub PR integration.** Reviews live locally; pushing receipts as a PR comment is a v0.2 candidate.
-- **No hosted mode.** The viewer runs on `localhost`; the store is per-repo.
-- **No Open Code or other agent-runtime adapters.** Claude Code is the only driver right now.
 
 ## License
 

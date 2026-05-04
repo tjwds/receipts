@@ -184,6 +184,7 @@ Run `gh pr checks <pr_number>` for CI status — one branch check per job. Map `
 
 Branch-level observation topics, when they apply:
 
+- **Matches the linked ticket / issue.** If the branch has an associated task in the team's task tracker (Linear, Jira, GitHub Issues, ZenHub, Shortcut, Asana, Trello, etc.), find the link — usually in the PR description, the branch name, or a commit trailer — and read the ticket. Then check the implementation against what the ticket actually asked for: does it solve the stated problem, does it leave parts unaddressed, does it do more than was asked? Flag scope creep and scope gaps as `⚠`; flag a clear miss (e.g., the ticket asks for behavior X and the branch implements behavior Y) as `✗`. If you can't find a linked ticket, say so in the check body and mark `⚠` — the absence of a ticket is itself worth surfacing.
 - **Pattern followed** — does this branch match an existing pattern, or invent a new one? Cite the precedent.
 - **Consistency** — was the change applied uniformly where it should have been? Anywhere it should have but didn't?
 - **Intentional asymmetry** — places where the branch deliberately deviates from a parallel pattern, with reasoning. These often warrant `⚠` even when correct, because the asymmetry is easy to misread later.

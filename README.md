@@ -2,6 +2,8 @@
 
 > A code review tool for the agentic era. Every diff, with receipts.
 
+![Screenshot of a review using receipts](assets/image.png)
+
 LLMs are increasingly involved in generating, refining, and reviewing code. `receipts` codifies the discipline of careful review by turning it into a structured, scannable artifact: for every block of a diff, an agent records what it checked, how it checked, and the evidence — and the result is rendered side-by-side with the diff.
 
 Three pieces:

@@ -125,7 +125,11 @@ export function mergeBlockDiffsForFile(
   let isNew = false;
 
   for (const block of blocks) {
-    const files = parseUnifiedDiff(block.diff);
+    const files = parseUnifiedDiff(
+      block.diff,
+      block.paths[0],
+      block.range[0],
+    );
     const file = files.find((f) => f.path === filePath);
 
     if (!file) continue;

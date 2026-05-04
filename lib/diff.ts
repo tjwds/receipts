@@ -17,13 +17,22 @@ export interface DiffFile {
   lines: DiffLine[];
 }
 
-export function parseUnifiedDiff(diff: string): DiffFile[] {
+export function parseUnifiedDiff(
+  diff: string,
+  defaultPath?: string,
+  defaultStartLine?: number,
+): DiffFile[] {
   const lines = diff.split("\n");
   const files: DiffFile[] = [];
   let current: DiffFile | null = null;
   let oldNum = 0;
   let newNum = 0;
   let inHunk = false;
+
+  const looksLikeDiffLine = (line: string) =>
+    line.startsWith("+") ||
+    line.startsWith("-") ||
+    (line.startsWith(" ") && line.length > 0);
 
   for (const line of lines) {
     if (line.startsWith("diff --git")) {
@@ -34,7 +43,11 @@ export function parseUnifiedDiff(diff: string): DiffFile[] {
       continue;
     }
     if (!current) {
-      current = { path: "(unknown)", isNew: false, lines: [] };
+      current = {
+        path: defaultPath ?? "(unknown)",
+        isNew: false,
+        lines: [],
+      };
     }
     if (line.startsWith("new file mode")) {
       current.isNew = true;
@@ -56,6 +69,17 @@ export function parseUnifiedDiff(diff: string): DiffFile[] {
       current.lines.push({ kind: "hunk", text: line });
       inHunk = true;
       continue;
+    }
+    // Tolerate diffs that are missing a `@@ ... @@` hunk header: if we see
+    // diff-like content while not in a hunk, synthesize one so line numbers
+    // and gutter rendering still work.
+    if (!inHunk && looksLikeDiffLine(line)) {
+      const start = defaultStartLine ?? 1;
+
+      oldNum = start;
+      newNum = start;
+      current.lines.push({ kind: "hunk", text: "@@" });
+      inHunk = true;
     }
     if (!inHunk) continue;
     if (line.startsWith("+")) {

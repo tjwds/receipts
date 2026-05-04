@@ -137,7 +137,9 @@ parent: null
 <one-paragraph intro: what is this block doing, in plain terms?>
 
 ```diff
-<embedded unified diff for ONLY this block's lines (filtered to its file(s) and range)>
+@@ -12,8 +12,18 @@ class Billing {
+   // ...embedded unified diff for ONLY this block's lines goes here.
+}
 ```
 
 ## Checks
@@ -155,9 +157,16 @@ Method: grep callers + read each call site
 ...
 ```
 
+### Diff formatting inside the block file
+
+The embedded diff is rendered as the file's slice in the viewer. Hunk headers (`@@ -<old>,<oldcount> +<new>,<newcount> @@`) are **required** for line numbers to render correctly. Two cases for the file header:
+
+- **Single-file block** (`paths: [one/file]`): just include the `@@ ... @@` hunks. The viewer infers the path from `paths[0]`. No `diff --git` header is required.
+- **Cross-file block** (`paths: [a, b, ...]`): include a `diff --git a/<path> b/<path>` header above each file's hunks. Without these headers, every hunk is attributed to `paths[0]` and rendering for the other paths breaks. The cleanest source for both cases is `git diff <base>..HEAD -- <path>` — copy the hunks from there.
+
 ### Cross-file blocks
 
-Use `paths: [a, b, c]` when the same logical change touches multiple files in parallel (e.g., a renamed type propagated to its callers, or a mechanical update applied identically across several configuration files). The embedded diff includes all the relevant files; the viewer renders only the slice for whichever file the user is currently viewing.
+Use `paths: [a, b, c]` when the same logical change touches multiple files in parallel (e.g., a renamed type propagated to its callers, or a mechanical update applied identically across several configuration files). Include `diff --git` headers per file as noted above. The viewer renders only the slice for whichever file the user is currently viewing.
 
 The `range: [start, end]` is approximate for cross-file blocks — use a representative range that applies to most files. If the ranges differ wildly per file, that's a sign the block is heterogenous and probably should be split.
 
@@ -182,10 +191,23 @@ Each branch check has a status, body, and trailers — same shape as a block che
 
 Branch checks are NOT where you summarize the PR — that's `review.md`. They are where you flag the things only a reviewer who held the whole branch in their head would notice, plus the operational signal (CI) the human needs in one place.
 
-### 8. Wrap up
+### 8. Self-check before declaring complete
 
-- Update `review.md` frontmatter: `status: complete`, fill in `finished_at`.
-- Write a one-line completion message to the user with the path to the rendered view.
+Before marking the review `complete`, walk through this checklist. The viewer is forgiving but not magic; broken inputs produce blank pages.
+
+- **`branch.diff` exists and is non-empty.** `wc -l .receipts/<slug>/branch.diff` should be > 0.
+- **`review.md` frontmatter has every field**, especially `files:` (the canonical list) and the SHAs. The block list is *derived* from `blocks/` — don't hand-maintain it.
+- **Every block file's `paths:` list is a subset of `review.md`'s `files:`.** A block whose path isn't in `files:` will appear nowhere in the sidebar. Quickest check: `for f in blocks/*.md; do head -10 "$f"; done | grep -A2 paths:` and eyeball.
+- **Every block's embedded diff has at least one `@@ ... @@` hunk header.** Without it, the gutter can't show line numbers and the rendered diff is empty. The cleanest source is `git diff <base>..HEAD -- <path>` — copy the hunks from there. If the block is single-file, the `diff --git` header is optional; if cross-file, it's required so the viewer can attribute hunks to files.
+- **Every block has at least one `### [✓|⚠|✗] ...` check.** Blocks with zero checks render as empty cards.
+- **`branch-checks.md` exists** with at least the CI status reflected as `### [✓|✗] CI: <job> ...` (one per `gh pr checks <pr>` row), plus any branch-level observations. Zero branch checks means the user has no signal that a CI job ran.
+- **Status: `complete`.** Set `status: complete` in `review.md` and fill in `finished_at`. Don't leave a finished review marked `in_progress`.
+
+If the user has the viewer running with `RECEIPTS_DIR` pointed at the target repo, hit each file route in the browser and confirm the diff and block cards render. A blank file page is the canonical symptom of one of the failures above.
+
+### 9. Wrap up
+
+- Write a one-line completion message to the user with the path to the rendered view (`http://localhost:<port>/r/<slug>` if the viewer is running).
 
 ## Writing good checks
 

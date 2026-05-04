@@ -210,9 +210,11 @@ export interface Block extends BlockMeta {
   checks: Check[];
 }
 
-export interface DesignPass {
+export interface BranchChecks {
   title: string;
-  body: string;
+  intro: string;
+  checks: Check[];
+  counts: CheckCounts;
 }
 
 const RECEIPTS_DIR =
@@ -363,16 +365,31 @@ export async function readBlock(
   return { ...meta, intro, diff, checks };
 }
 
-export async function readDesignPass(
+export async function readBranchChecks(
   slug: string,
-): Promise<DesignPass | null> {
-  const filePath = path.join(RECEIPTS_DIR, slug, "design-pass.md");
+): Promise<BranchChecks | null> {
+  const filePath = path.join(RECEIPTS_DIR, slug, "branch-checks.md");
   const raw = await readIfExists(filePath);
+
   if (!raw) return null;
   const { data, content } = matter(raw);
+  const checksHeaderIdx = content.indexOf("\n## Checks");
+  let intro = "";
+  let rest = content;
+
+  if (checksHeaderIdx !== -1) {
+    intro = content.slice(0, checksHeaderIdx).trim();
+    rest = content.slice(checksHeaderIdx);
+  }
+
+  const checks = parseChecks(rest);
+  const counts = countChecks(checks);
+
   return {
-    title: String(data.title ?? "Design pass"),
-    body: content.trim(),
+    title: String(data.title ?? "Branch checks"),
+    intro,
+    checks,
+    counts,
   };
 }
 

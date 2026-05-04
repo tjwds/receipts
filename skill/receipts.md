@@ -27,7 +27,7 @@ Common user requests this skill handles:
 
 | User says | What you do |
 |---|---|
-| "review this branch / PR" | Full workflow below: read the diff, decompose into blocks, write checks, do a design pass. |
+| "review this branch / PR" | Full workflow below: read the diff, decompose into blocks, write checks, write branch-level checks (CI + design observations). |
 | "what about block N" | Read `.receipts/<slug>/blocks/<N>-*.md`, summarize, answer the user's question, possibly drill in further. |
 | "re-check block N" | Re-run verifications for that block. Update the file in place. |
 | "split block N" | Split a too-large block into smaller, focused ones. Renumber subsequent blocks if needed. |
@@ -161,18 +161,26 @@ Use `paths: [a, b, c]` when the same logical change touches multiple files in pa
 
 The `range: [start, end]` is approximate for cross-file blocks — use a representative range that applies to most files. If the ranges differ wildly per file, that's a sign the block is heterogenous and probably should be split.
 
-### 7. Write `design-pass.md`
+### 7. Write `branch-checks.md`
 
-Branch-level commentary on patterns, missed call sites, abstraction overlap. Frontmatter is just `title`. Sections to cover when relevant:
+Branch-level checks use the same `### [✓|⚠|✗] Title` format as block checks. They cover two things: **CI status** (one check per CI job, status reflecting pass/fail/in-progress) and **branch-level observations** that only make sense when you've held the whole branch in your head.
+
+Frontmatter is just `title`. Optional intro paragraph above the `## Checks` header.
+
+Run `gh pr checks <pr_number>` for CI status — one branch check per job. Map `pass` → `✓`, `fail` → `✗`, `in_progress` / `pending` / `skipped` → `⚠` (or omit if you'd rather not surface noise). Trailer should include the run URL as `Source:`.
+
+Branch-level observation topics, when they apply:
 
 - **Pattern followed** — does this branch match an existing pattern, or invent a new one? Cite the precedent.
 - **Consistency** — was the change applied uniformly where it should have been? Anywhere it should have but didn't?
-- **Intentional asymmetry** — places where the branch deliberately deviates from a parallel pattern, with reasoning.
+- **Intentional asymmetry** — places where the branch deliberately deviates from a parallel pattern, with reasoning. These often warrant `⚠` even when correct, because the asymmetry is easy to misread later.
 - **New abstractions** — overlap with existing code? Misnaming risk?
 - **Sites that probably should have changed but didn't** — surface these by name.
-- **Watch-outs** — silent breaking changes, deferred follow-ups, things that need a TODO.
+- **Watch-outs** — silent breaking changes, deferred follow-ups, things that need a TODO. Often `⚠`; sometimes `✗` if the change is breaking enough.
 
-Be specific. Cite files and line ranges. The design pass is not where you summarize the PR — that's `review.md`. Design pass is where you flag the things only a reviewer who held the whole branch in their head would notice.
+Each branch check has a status, body, and trailers — same shape as a block check. Be specific. Cite files and line ranges in the body when relevant; the trailer captures method, not location.
+
+Branch checks are NOT where you summarize the PR — that's `review.md`. They are where you flag the things only a reviewer who held the whole branch in their head would notice, plus the operational signal (CI) the human needs in one place.
 
 ### 8. Wrap up
 
@@ -242,9 +250,9 @@ When a rule references a kind of thing ("always check that exported types have J
 
 ## Things to avoid
 
-- **Don't editorialize.** "This is a great refactor" or "this code is messy" both belong in the design pass at most, never in a check.
+- **Don't editorialize.** "This is a great refactor" or "this code is messy" both belong in branch checks at most, never in a block check.
 - **Don't pad the checklist with checks you didn't actually run.** Five real checks beat fifteen empty ones. The trailer is a record of *work performed*; if you didn't do the work, don't write the check.
 - **Don't auto-✓ everything.** A block where every check is `✓` after a real review is fine — but if you find yourself stamping `✓` on checks you didn't think about, pause and consider whether the block was the right grain.
 - **Don't pull line numbers from the diff into `Source:` trailers.** The block's range is the scope. Trailers are prose citations, not line locators.
 - **Don't manually set block status in frontmatter.** It's derived. Setting it creates drift.
-- **Don't treat the design pass as a summary.** Summaries go in `review.md`. Design pass is the place to surface things the per-block view can't.
+- **Don't treat branch checks as a summary.** Summaries go in `review.md`. Branch checks are where CI status and the things only a whole-branch reviewer would notice live — not a recap.

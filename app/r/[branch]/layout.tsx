@@ -1,7 +1,12 @@
 import { notFound } from "next/navigation";
 import NextLink from "next/link";
 
-import { groupBlocksByFile, listBlocks, readReviewMeta } from "@/lib/store";
+import {
+  groupBlocksByFile,
+  listBlocks,
+  readBranchChecks,
+  readReviewMeta,
+} from "@/lib/store";
 import { CheckCounts } from "@/components/check-counts";
 
 export default async function ReviewLayout({
@@ -15,7 +20,10 @@ export default async function ReviewLayout({
   const review = await readReviewMeta(branch);
 
   if (!review) notFound();
-  const blocks = await listBlocks(branch);
+  const [blocks, branchChecks] = await Promise.all([
+    listBlocks(branch),
+    readBranchChecks(branch),
+  ]);
   const fileGroups = groupBlocksByFile(blocks, review.files);
 
   return (
@@ -68,8 +76,17 @@ export default async function ReviewLayout({
               className="block rounded-md px-3 py-2 text-sm hover:bg-surface"
               href={`/r/${branch}`}
             >
-              <span className="text-muted">Branch-level</span>
-              <div className="font-medium">Design pass</div>
+              <span className="text-xs text-muted/70 uppercase tracking-wider">
+                Branch
+              </span>
+              <div className="font-medium">Branch checks</div>
+              {branchChecks && (
+                <div className="mt-1 flex items-center gap-2 text-xs text-muted">
+                  <span>{branchChecks.checks.length}</span>
+                  <span aria-hidden>·</span>
+                  <CheckCounts counts={branchChecks.counts} size="sm" />
+                </div>
+              )}
             </NextLink>
             <div className="px-3 pb-1 pt-3 text-xs uppercase tracking-wider text-muted/70">
               Files ({fileGroups.length})
